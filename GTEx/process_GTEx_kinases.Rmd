@@ -1,0 +1,74 @@
+---
+title: "GTEx Parsing"
+author: "Matthew Berginski"
+date: "April 9, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(here)
+
+library(DarkKinaseTools)
+```
+
+# Download GTEx Data
+
+```{r download}
+GTEx_file = here('GTEx/GTEx_Analysis_2016-01-15_v7_RNASeQCv1.1.8_gene_median_tpm.gct.gz')
+
+if (! file.exists(GTEx_file)) {
+  download.file(url = "https://storage.googleapis.com/gtex_analysis_v7/rna_seq_data/GTEx_Analysis_2016-01-15_v7_RNASeQCv1.1.8_gene_median_tpm.gct.gz",
+                GTEx_file)
+}
+
+GTEx_data = read_delim(GTEx_file,delim="\t",skip=2)
+```
+
+# Kinase Extraction
+
+```{r kinase_filtering}
+kinase_data_tidy = GTEx_data %>%
+  right_join(all_kinases %>% select('class','symbol'), 
+             by=c('Description'='symbol')) %>%
+  select(-gene_id) %>%
+  rename(symbol=Description) %>%
+  gather("tissue_type","TPM",-symbol,-class) %>%
+  filter(!is.na(TPM))
+```
+
+```{r kinase_expression_levels}
+kinase_mean_expression = kinase_data_tidy %>%
+  group_by(symbol,class) %>%
+  summarise(mean_expression = mean(TPM))
+
+kinase_percentile_per_tissue = kinase_data_tidy %>%
+  group_by(tissue_type) %>%
+  mutate(kinase_percentile = 100*round(percent_rank(TPM),2))
+
+highly_expressed_DK = kinase_percentile_per_tissue %>%
+  filter(class == "Dark",kinase_percentile >= 90)
+
+write_csv(highly_expressed_DK,here('GTEx/highly_expressed_DK_90_percentile.csv'))
+
+dir.create(here('GTEx','GTEx_highly_expressed_kinases'),showWarnings = F)
+for (this_tissue in unique(highly_expressed_DK$tissue_type)) {
+  this_kinase_data = highly_expressed_DK %>% 
+    filter(tissue_type == this_tissue) %>% 
+    arrange(desc(kinase_percentile))
+  write_csv(this_kinase_data, here('GTEx','GTEx_highly_expressed_kinases',paste0(this_tissue,'.csv')))
+}
+
+```
+
+```{r}
+highly_expressed_DK_tissue_counts = highly_expressed_DK %>%
+  group_by(tissue_type) %>%
+  summarise(DK_count = n())
+
+highly_expressed_DK_gene_counts = highly_expressed_DK %>%
+  group_by(symbol) %>%
+  summarise(tissue_count = n())
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
