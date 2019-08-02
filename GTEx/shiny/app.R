@@ -98,16 +98,15 @@ ui <- navbarPage("Dark Kinase Expression",
 
 # Define server logic to plot various variables against mpg ----
 server <- function(input, output) {
-  
-  
-  
+
   #############################################################################
   #Kinase Searching Functions
   #############################################################################
   this_kinase_selection <- reactive({
     dark_kinases_percentiles %>%
       filter(symbol == input$kinase, 
-             kinase_percentile >= input$min_percentile)
+             kinase_percentile >= input$min_percentile) %>% 
+      arrange(desc(kinase_percentile), desc(TPM))
   })
   
   output$anato_male_by_kinase <- renderPlot({
