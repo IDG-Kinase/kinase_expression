@@ -3,6 +3,7 @@ library(gganatogram)
 library(tidyverse)
 library(DT)
 library(here)
+library(BerginskiRMisc)
 
 kinase_percentiles = read_csv(here('GTEx/GTex_kinase_percentiles.csv'))
 dark_kinases_percentiles = kinase_percentiles %>% 
@@ -27,7 +28,7 @@ ui <- navbarPage("Dark Kinase Expression",
                  tabPanel("By Kinase",
                           # Sidebar panel for inputs ----
                           fluidRow(
-                            column(4,
+                            column(3,
                                    wellPanel(
                                      selectInput(inputId = "kinase",
                                                  label = "Choose a dark kinase:",
@@ -36,10 +37,13 @@ ui <- navbarPage("Dark Kinase Expression",
                                                  label = "Minimum Kinase Expression Percentile:",
                                                  min=0,max=100,value=90))),
                             column(1),
-                            column(3,
+                            column(2,
                                    plotOutput("anato_male_by_kinase", height="10cm",width="6cm")),
-                            column(3,
-                                   plotOutput("anato_female_by_kinase", height="10cm",width="6cm"))),
+                            column(2,
+                                   plotOutput("anato_female_by_kinase", height="10cm",width="6cm")),
+                            column(4,
+                                 plotOutput("kinase_percentile_dist"))
+                          ),
                           
                           # Main panel for displaying outputs ----
                           fluidRow(
@@ -50,7 +54,7 @@ ui <- navbarPage("Dark Kinase Expression",
                  ),
                  tabPanel("By Organ System",
                           fluidRow(
-                            column(4,
+                            column(3,
                                    wellPanel(
                                      selectInput(inputId = "tissue_type",
                                                  label = "Choose an Organ System:",
@@ -59,10 +63,13 @@ ui <- navbarPage("Dark Kinase Expression",
                                                  label = "Minimum Kinase Expression Percentile:",
                                                  min=0,max=100,value=90))),
                             column(1),
-                            column(3,
+                            column(2,
                                    plotOutput("anato_male_by_organ", height="10cm",width="6cm")),
-                            column(3,
-                                   plotOutput("anato_female_by_organ", height="10cm",width="6cm"))
+                            column(2,
+                                   plotOutput("anato_female_by_organ", height="10cm",width="6cm")),
+                            column(4,
+                                   plotOutput("organ_percentile_dist"))
+                            
                           ),
 
                           # Main panel for displaying outputs ----
@@ -77,6 +84,8 @@ ui <- navbarPage("Dark Kinase Expression",
 
 # Define server logic to plot various variables against mpg ----
 server <- function(input, output) {
+  
+  
   
   #############################################################################
   #Kinase Searching Functions
@@ -97,16 +106,35 @@ server <- function(input, output) {
                 sex = 'Female') + theme_void()
   })
 
+  output$kinase_percentile_dist <- renderPlot({
+    full_kinase_data = dark_kinases_percentiles %>%
+      filter(symbol == input$kinase) %>%
+      arrange(desc(kinase_percentile)) %>% 
+      mutate(percentile_index = 1:n())
+    
+    ggplot(full_kinase_data, aes(x=percentile_index,y=kinase_percentile)) + 
+      geom_line() + 
+      ylim(c(0,100)) + 
+      geom_hline(yintercept = input$min_percentile, color='red', alpha=0.5) + 
+      geom_text(x=0, y=input$min_percentile, 
+                label = "Min Kinase Percentile", 
+                color='red', hjust=0, vjust=-0.25, alpha=0.5) +
+      labs(x="Organ Index", y="Kinase Percentile") +
+      theme(text = element_text(size=20)) +
+      theme_berginski()
+  })
+  
   output$kinase_data_summary <- renderDataTable({
     datatable(this_kinase_selection(),
               options = dataTableOptions)
   })
   
+  
+  
   #############################################################################
   #Organ Searching Functions
   #############################################################################
   this_organ_selection <- reactive({
-    print(input$min_percentile_organ)
     dark_kinases_percentiles %>%
       filter(tissue_type == input$tissue_type, 
              kinase_percentile >= input$min_percentile_organ)
@@ -123,6 +151,23 @@ server <- function(input, output) {
                 sex = 'Female') + theme_void()
   })
   
+  output$organ_percentile_dist <- renderPlot({
+    full_organ_data = dark_kinases_percentiles %>%
+      filter(tissue_type == input$tissue_type) %>%
+      arrange(desc(kinase_percentile)) %>% 
+      mutate(percentile_index = 1:n())
+    
+    ggplot(full_organ_data, aes(x=percentile_index,y=kinase_percentile)) + 
+      geom_line() + 
+      ylim(c(0,100)) + 
+      geom_hline(yintercept = input$min_percentile_organ, color='red', alpha=0.5) + 
+      geom_text(x=0, y=input$min_percentile_organ, 
+                label = "Min Kinase Percentile", 
+                color='red', hjust=0, vjust=-0.25, alpha=0.5) +
+      labs(x="Dark Kinase Index", y="Kinase Percentile") +
+      theme(text = element_text(size=20)) +
+      theme_berginski()
+  })
   
   output$kinase_organ_summary <- renderDataTable({
     datatable(this_organ_selection(),
