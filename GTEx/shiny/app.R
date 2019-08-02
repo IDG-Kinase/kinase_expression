@@ -51,7 +51,7 @@ ui <- navbarPage("Dark Kinase Expression",
                             column(4,
                                  plotOutput("kinase_percentile_dist"))
                           ),
-                          
+                          hr(),
                           # Main panel for displaying outputs ----
                           fluidRow(
                             column(12,
@@ -78,7 +78,7 @@ ui <- navbarPage("Dark Kinase Expression",
                                    plotOutput("organ_percentile_dist"))
                             
                           ),
-
+                          hr(),
                           # Main panel for displaying outputs ----
                           fluidRow(
                             column(12,
