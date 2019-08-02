@@ -68,7 +68,14 @@ ui <- navbarPage("Dark Kinase Expression",
                                                  choices = dark_kinase_order_by_system$tissue_type),
                                      sliderInput(inputId = "min_percentile_organ",
                                                  label = "Minimum Kinase Expression Percentile:",
-                                                 min=0,max=100,value=90))),
+                                                 min=0,max=100,value=90)),
+                                   h3("Kinase Expression Percentile"),
+                                   p("The kinase expression percentile is calculated by extracting 
+                                     all the kinase expression values from the GTEx Project and 
+                                     then determining where each kinase ranks within each organ 
+                                     system. Thus, a kinase with a kinase percentile of 90 has 
+                                     an expression level in the highest 10 percent of kinases in 
+                                     that organ system.")),
                             column(1),
                             column(2,
                                    plotOutput("anato_male_by_organ", height="10cm",width="6cm")),
@@ -137,14 +144,14 @@ server <- function(input, output) {
   })
   
   
-  
   #############################################################################
   #Organ Searching Functions
   #############################################################################
   this_organ_selection <- reactive({
     dark_kinases_percentiles %>%
       filter(tissue_type == input$tissue_type, 
-             kinase_percentile >= input$min_percentile_organ)
+             kinase_percentile >= input$min_percentile_organ) %>% 
+      arrange(desc(kinase_percentile), desc(TPM))
   })
   
   output$anato_male_by_organ <- renderPlot({
