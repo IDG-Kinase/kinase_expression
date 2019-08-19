@@ -142,8 +142,7 @@ server <- function(input, output) {
       geom_hline(yintercept = input$min_percentile, color='red', alpha=0.5) + 
       geom_text(x=0, y=input$min_percentile, 
                 label = "Min Kinase Percentile", 
-                color='red', hjust=0, vjust=-0.25, alpha=0.5,
-                family="mono") +
+                color='red', hjust=0, vjust=-0.25, alpha=0.5) +
       labs(x="Organ Index", y="Kinase Percentile") +
       theme(text = element_text(size=20)) +
       theme_berginski()
