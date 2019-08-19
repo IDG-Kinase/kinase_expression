@@ -7,17 +7,29 @@ library(BerginskiRMisc)
 
 kinase_percentiles = read_csv(here('GTEx/GTex_kinase_percentiles.csv'))
 dark_kinases_percentiles = kinase_percentiles %>% 
-  filter(class == "Dark")
+  filter(class == "Dark") %>% 
+  #This bit of code adds a column for the positional index of the ranked kinase
+  #percentile, will be used for plotting purposes
+  group_by(symbol) %>% 
+  arrange(desc(kinase_percentile)) %>% 
+  mutate(percentile_index = 1:n()) %>% 
+  ungroup() %>%
+  
+  #Comparible bit to add an organ percentile index
+  group_by(tissue_type) %>%
+  arrange(desc(kinase_percentile)) %>%
+  mutate(organ_percentile_index = 1:n()) %>%
+  ungroup()
 
 dark_kinase_order = dark_kinases_percentiles %>%
   group_by(symbol) %>%
-  summarise(num_above_90 = sum(kinase_percentile >= 90)) %>%
-  arrange(desc(num_above_90))
+  summarise(mean_percentile = mean(kinase_percentile)) %>% 
+  arrange(desc(mean_percentile))
 
 dark_kinase_order_by_system = dark_kinases_percentiles %>%
   group_by(tissue_type) %>%
-  summarise(num_above_90 = sum(kinase_percentile >= 90)) %>%
-  arrange(desc(num_above_90))
+  summarise(mean_percentile = mean(kinase_percentile)) %>% 
+  arrange(desc(mean_percentile))
 
 GTEx_to_gganato = read_rds(here('GTEx/GTEx_tissue_to_gganato.rds'))
 
@@ -121,24 +133,25 @@ server <- function(input, output) {
 
   output$kinase_percentile_dist <- renderPlot({
     full_kinase_data = dark_kinases_percentiles %>%
-      filter(symbol == input$kinase) %>%
-      arrange(desc(kinase_percentile)) %>% 
-      mutate(percentile_index = 1:n())
+      filter(symbol == input$kinase)
     
-    ggplot(full_kinase_data, aes(x=percentile_index,y=kinase_percentile)) + 
-      geom_line() + 
+    ggplot(dark_kinases_percentiles, aes(x=percentile_index,y=kinase_percentile, group=symbol)) + 
+      geom_line(alpha=0.05) + 
       ylim(c(0,100)) + 
+      geom_line(data=full_kinase_data, aes(x=percentile_index,y=kinase_percentile)) +
       geom_hline(yintercept = input$min_percentile, color='red', alpha=0.5) + 
       geom_text(x=0, y=input$min_percentile, 
                 label = "Min Kinase Percentile", 
-                color='red', hjust=0, vjust=-0.25, alpha=0.5) +
+                color='red', hjust=0, vjust=-0.25, alpha=0.5,
+                family="mono") +
       labs(x="Organ Index", y="Kinase Percentile") +
       theme(text = element_text(size=20)) +
       theme_berginski()
   })
   
   output$kinase_data_summary <- renderDataTable({
-    datatable(this_kinase_selection(),
+    datatable(this_kinase_selection() %>%
+                select(-percentile_index,-organ_percentile_index),
               options = dataTableOptions)
   })
   
@@ -166,13 +179,12 @@ server <- function(input, output) {
   
   output$organ_percentile_dist <- renderPlot({
     full_organ_data = dark_kinases_percentiles %>%
-      filter(tissue_type == input$tissue_type) %>%
-      arrange(desc(kinase_percentile)) %>% 
-      mutate(percentile_index = 1:n())
+      filter(tissue_type == input$tissue_type)
     
-    ggplot(full_organ_data, aes(x=percentile_index,y=kinase_percentile)) + 
-      geom_line() + 
+    ggplot(dark_kinases_percentiles, aes(x=organ_percentile_index,y=kinase_percentile,group=tissue_type)) + 
+      geom_line(alpha=0.05) + 
       ylim(c(0,100)) + 
+      geom_line(data=full_organ_data, aes(x=organ_percentile_index,y=kinase_percentile)) +
       geom_hline(yintercept = input$min_percentile_organ, color='red', alpha=0.5) + 
       geom_text(x=0, y=input$min_percentile_organ, 
                 label = "Min Kinase Percentile", 
@@ -183,7 +195,8 @@ server <- function(input, output) {
   })
   
   output$kinase_organ_summary <- renderDataTable({
-    datatable(this_organ_selection(),
+    datatable(this_organ_selection() %>%
+                select(-percentile_index,-organ_percentile_index),
               options = dataTableOptions)
   })
   
