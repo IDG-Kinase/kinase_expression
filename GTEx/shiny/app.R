@@ -37,6 +37,7 @@ dataTableOptions = list(paging = FALSE,
                         order = list(list(6, 'desc')))
 
 ui <- navbarPage("Dark Kinase Expression",
+                 header = singleton(includeScript("google-analytics.js")),
                  tabPanel("By Kinase",
                           # Sidebar panel for inputs ----
                           fluidRow(
