@@ -35,6 +35,16 @@ kinase_data_tidy = GTEx_data %>%
   rename(symbol=Description) %>%
   gather("tissue_type","TPM",-symbol,-class) %>%
   filter(!is.na(TPM))
+
+#Removing some tissue types that don't match up with body parts
+kinase_data_tidy = kinase_data_tidy %>%
+  filter(tissue_type != "Cells - EBV-transformed lymphocytes",
+         tissue_type != "Cells - Transformed fibroblasts")
+
+GTEx_to_gganato = read_rds(here('GTEx/GTEx_tissue_to_gganato.rds'))
+
+kinase_data_tidy = kinase_data_tidy %>%
+  left_join(GTEx_to_gganato)
 ```
 
 ```{r kinase_expression_levels}
@@ -44,7 +54,8 @@ kinase_mean_expression = kinase_data_tidy %>%
 
 kinase_percentile_per_tissue = kinase_data_tidy %>%
   group_by(tissue_type) %>%
-  mutate(kinase_percentile = 100*round(percent_rank(TPM),2))
+  mutate(kinase_percentile = 100*round(percent_rank(TPM),2)) %>%
+  write_csv(here('GTEx/GTex_kinase_percentiles.csv'))
 
 highly_expressed_DK = kinase_percentile_per_tissue %>%
   filter(class == "Dark",kinase_percentile >= 90)
@@ -70,5 +81,3 @@ highly_expressed_DK_gene_counts = highly_expressed_DK %>%
   group_by(symbol) %>%
   summarise(tissue_count = n())
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
