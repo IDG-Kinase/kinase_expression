@@ -1,0 +1,84 @@
+---
+title: "Human Proteome Map Processing"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(DarkKinaseTools)
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+```{r}
+HPM_protein_data = read_csv(here('HPM/HPM_protein_level_expression_matrix_Kim_et_al_052914.csv')) %>%
+  clean_names()
+```
+
+```{r}
+if (! file.exists(here('HPM/refSeq_to_HGNC.rds'))) {
+  ensembl = biomaRt::useMart("ensembl",dataset="hsapiens_gene_ensembl")
+  biomaRt::listAttributes(ensembl)
+  
+  refSeq_to_HGNC = biomaRt::getBM(attributes = c('refseq_peptide','hgnc_symbol'), 
+                                  values = HPM_protein_data$ref_seq_accession, 
+                                  mart=ensembl)
+  write_rds(refSeq_to_HGNC,here('HPM/refSeq_to_HGNC.rds'))
+} else {
+  refSeq_to_HGNC = read_rds(here('HPM/refSeq_to_HGNC.rds'))
+}
+```
+
+```{r}
+HPM_protein_data = HPM_protein_data %>% 
+  separate(ref_seq_accession, c('ref_seq_trimmed',NA),"\\.") %>%
+  left_join(refSeq_to_HGNC,by=c('ref_seq_trimmed' = 'refseq_peptide')) %>%
+  rename(symbol = hgnc_symbol)
+
+HPM_kinases = HPM_protein_data %>% 
+  filter(symbol %in% all_kinases$symbol)
+```
+
+```{r}
+HPM_kinases_tidy = HPM_kinases %>%
+  select(-accession, -ref_seq_trimmed) %>%
+  gather('tissue_type','protein_level',-symbol) %>%
+  
+  #Only want to include the adult tissues in the browser
+  filter(str_detect(tissue_type,'adult')) %>%
+  
+  #Many of the kinases have several hits in the Ref Seq IDs, so I'll group all
+  #the hits to each kinase together and sum the levels
+  group_by(symbol, tissue_type) %>%
+  summarise(total_protein_level = sum(protein_level)) %>%
+  ungroup() %>%
+  
+  #Add in the class column back
+  left_join(all_kinases %>% select('symbol','class')) %>%
+  
+  #Calculate the kinase percentile per tissue type
+  group_by(tissue_type) %>%
+  mutate(kinase_percentile = 100*round(percent_rank(total_protein_level),2)) %>%
+  
+  filter(class=="Dark") %>%
+  
+  #This bit of code adds a column for the positional index of the ranked kinase
+  #percentile, will be used for plotting purposes
+  group_by(symbol) %>% 
+  arrange(desc(kinase_percentile)) %>% 
+  mutate(percentile_index = 1:n()) %>% 
+  ungroup() %>%
+  
+  #Comparible bit to add an organ percentile index
+  group_by(tissue_type) %>%
+  arrange(desc(kinase_percentile)) %>%
+  mutate(organ_percentile_index = 1:n()) %>%
+  ungroup() %>%
+  
+  #Map in the ggantogram labels 
+  left_join(read_rds(here('HPM/HPM_tissue_to_gganato.rds'))) %>%
+  
+  #Write out the results to both 
+  write_rds(here('HPM/HPM_kinase_percentiles.rds')) %>%
+  write_rds(here('GTEx/HPM_kinase_percentiles.rds'))
+```
