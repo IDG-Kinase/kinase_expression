@@ -145,12 +145,10 @@ ui <- navbarPage("Dark Kinase Expression",
                                                  label = "Minimum Kinase Expression Percentile:",
                                                  min=0,max=100,value=90)),
                                    h3("Kinase Mass Spec Level Percentile"),
-                                   p("The kinase expression percentile is calculated by extracting 
-                                     all the kinase expression values from the GTEx Project and 
-                                     then determining where each kinase ranks within each organ 
-                                     system. Thus, a kinase with a kinase percentile of 90 has 
-                                     an expression level in the highest 10 percent of kinases in 
-                                     that organ system.")),
+                                   p("The kinase expression percentile is calculated by from 
+                                     all the kinase measurements in the Human Proteome Map. Each 
+                                     kinase is then ranked within each organ system to derive kinase 
+                                     percentile ranking.")),
                             column(1),
                             column(2,
                                    plotOutput("HPM_anato_male_by_kinase", height="10cm",width="6cm")),
@@ -178,12 +176,10 @@ ui <- navbarPage("Dark Kinase Expression",
                                                  label = "Minimum Kinase Expression Percentile:",
                                                  min=0,max=100,value=90)),
                                    h3("Kinase Mass Spec Level Percentile"),
-                                   p("The kinase expression percentile is calculated by extracting 
-                                     all the kinase expression values from the GTEx Project and 
-                                     then determining where each kinase ranks within each organ 
-                                     system. Thus, a kinase with a kinase percentile of 90 has 
-                                     an expression level in the highest 10 percent of kinases in 
-                                     that organ system.")),
+                                   p("The kinase expression percentile is calculated by from 
+                                     all the kinase measurements in the Human Proteome Map. Each 
+                                     kinase is then ranked within each organ system to derive kinase 
+                                     percentile ranking.")),
                             column(1),
                             column(2,
                                    plotOutput("HPM_anato_male_by_organ", height="10cm",width="6cm")),
