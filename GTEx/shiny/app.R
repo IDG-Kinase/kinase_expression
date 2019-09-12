@@ -7,11 +7,8 @@ library(BerginskiRMisc)
 
 ###############################################################################
 # Data Loading
-###############################################################################
 
-###########################################################
-# GTEx Data Processing
-###########################################################
+# GTEx Data Processing ####
 
 kinase_percentiles = read_csv(here('GTEx/GTex_kinase_percentiles.csv'))
 dark_kinase_percentiles = kinase_percentiles %>% 
@@ -39,9 +36,9 @@ dark_kinase_order_by_system = dark_kinase_percentiles %>%
   summarise(mean_percentile = mean(kinase_percentile)) %>% 
   arrange(desc(mean_percentile))
 
-###########################################################
-# HPM Data Processing
-###########################################################
+GTEx_correlations = read_rds(here('GTEx/GTEx_expression_correlations_DK_only.rds'))
+
+# HPM Data Processing ####
 
 HPM_kinase_percentiles = read_rds(here('GTEx/HPM_kinase_percentiles.rds')) %>% 
   filter(class == "Dark")
@@ -56,9 +53,8 @@ HPM_dark_kinase_order_by_system = HPM_kinase_percentiles %>%
   summarise(mean_percentile = mean(kinase_percentile)) %>% 
   arrange(desc(mean_percentile))
 
-###########################################################
-# Misc Global Variables
-###########################################################
+# Misc Global Variables ####
+
 
 dataTableOptions = list(paging = FALSE, 
                         order = list(list(6, 'desc')))
@@ -66,6 +62,10 @@ dataTableOptions = list(paging = FALSE,
 mass_spec_desc = HTML(paste0("The kinase expression percentile is calculated by from all the kinase measurements in the ",
        a(href="http://humanproteomemap.org/index.php", "Human Proteome Map"),
        ". Each kinase is then ranked within each organ system to derive kinase percentile ranking."))
+
+
+###############################################################################
+# Main Shiny App
 
 ui <- navbarPage("Dark Kinase Expression",
                  header = singleton(includeScript("google-analytics.js")),
@@ -87,14 +87,36 @@ ui <- navbarPage("Dark Kinase Expression",
                                      system. Thus, a kinase with a kinase percentile of 90 has 
                                      an expression level in the highest 10 percent of kinases in 
                                      that organ system.")),
-                            column(1),
+                                  
+                            # column(1),
                             column(2,
                                    plotOutput("anato_male_by_kinase", height="10cm",width="6cm")),
                             column(2,
                                    plotOutput("anato_female_by_kinase", height="10cm",width="6cm")),
-                            column(4,
-                                   plotOutput("kinase_percentile_dist"))
+                            column(3,
+                                   plotOutput("kinase_percentile_dist")),
+                            column(2,
+                                   h3("Most Similar Kinases"),
+                                   p("Kinases whose expression profiles are most similar and associated correlation values:"),
+                                   h4("Light Kinases"),
+                                   htmlOutput("matchedLightKinases"),
+                                   h4("Dark Kinases"),
+                                   htmlOutput("matchedDarkKinases"))
                           ),
+                          
+                          # hr(),
+                          # fluidRow(
+                          #   column(4,
+                          #          h3("Kinase Expression Similarity")),
+                          #   column(4,
+                          #          h3("Light"),
+                          #          htmlOutput("matchedLightKinases")),
+                          #   column(4,
+                          #          h4("Dark"),
+                          #          textOutput("matchedDarkKinases"))
+                          # ),
+                          
+                          
                           hr(),
                           # Main panel for displaying outputs ----
                           fluidRow(
@@ -213,12 +235,14 @@ server <- function(input, output) {
   
   output$anato_male_by_kinase <- renderPlot({
     gganatogram(data=hgMale_key %>% filter(organ %in% this_kinase_selection()$organ),
-                sex = 'Male') + theme_void()
+                sex = 'Male') + theme_void() +
+      theme(plot.margin = margin(0, 0, 0, 0, "cm"))
   })
   
   output$anato_female_by_kinase <- renderPlot({
     gganatogram(data=hgFemale_key %>% filter(organ %in% this_kinase_selection()$organ),
-                sex = 'Female') + theme_void()
+                sex = 'Female') + theme_void() +
+      theme(plot.margin = margin(0, 0, 0, 0, "cm"))
   })
   
   output$kinase_percentile_dist <- renderPlot({
@@ -234,7 +258,8 @@ server <- function(input, output) {
                 label = "Min Kinase Percentile", 
                 color='red', hjust=0, vjust=-0.25, alpha=0.5) +
       labs(x="Organ Index", y="Kinase Percentile") +
-      theme(text = element_text(size=20)) +
+      theme(text = element_text(size=20),
+            plot.margin = margin(0, 1, 0, 0, "cm")) +
       theme_berginski()
   })
   
@@ -244,6 +269,35 @@ server <- function(input, output) {
               options = dataTableOptions)
   })
   
+  output$matchedLightKinases <- renderPrint({
+    matched_light = GTEx_correlations %>%
+      filter(kinase_1 == input$kinase, kinase_2_class == "Light") %>%
+      top_n(5,kinase_percentile_cor) %>%
+      arrange(desc(kinase_percentile_cor))
+    
+    tags$ul(
+      tags$li(matched_light$kinase_2[1], "-", matched_light$kinase_percentile_cor[1]),
+      tags$li(matched_light$kinase_2[2], "-", matched_light$kinase_percentile_cor[2]),
+      tags$li(matched_light$kinase_2[3], "-", matched_light$kinase_percentile_cor[3]),
+      tags$li(matched_light$kinase_2[4], "-", matched_light$kinase_percentile_cor[4]),
+      tags$li(matched_light$kinase_2[5], "-", matched_light$kinase_percentile_cor[5])
+    )
+  })
+  
+  output$matchedDarkKinases <- renderPrint({
+    matched_light = GTEx_correlations %>%
+      filter(kinase_1 == input$kinase, kinase_2_class == "Dark") %>%
+      top_n(5,kinase_percentile_cor) %>%
+      arrange(desc(kinase_percentile_cor))
+    
+    tags$ul(
+      tags$li(matched_light$kinase_2[1], "-", matched_light$kinase_percentile_cor[1]),
+      tags$li(matched_light$kinase_2[2], "-", matched_light$kinase_percentile_cor[2]),
+      tags$li(matched_light$kinase_2[3], "-", matched_light$kinase_percentile_cor[3]),
+      tags$li(matched_light$kinase_2[4], "-", matched_light$kinase_percentile_cor[4]),
+      tags$li(matched_light$kinase_2[5], "-", matched_light$kinase_percentile_cor[5])
+    )
+  })
   
   
   #############################################################################
