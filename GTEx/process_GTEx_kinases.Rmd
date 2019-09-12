@@ -69,7 +69,67 @@ for (this_tissue in unique(highly_expressed_DK$tissue_type)) {
     arrange(desc(kinase_percentile))
   write_csv(this_kinase_data, here('GTEx','GTEx_highly_expressed_kinases',paste0(this_tissue,'.csv')))
 }
+```
 
+```{r}
+calc_cor <- function(kinase_1, kinase_2, percentile_data = kinase_percentile_per_tissue) {
+  library(broom)
+  kinase_1_percentiles = (kinase_percentile_per_tissue %>% filter(symbol == kinase_1))$kinase_percentile
+  kinase_2_percentiles = (kinase_percentile_per_tissue %>% filter(symbol == kinase_2))$kinase_percentile
+  return(tidy(cor.test(kinase_1_percentiles,kinase_2_percentiles))$estimate)
+}
+
+calc_mean_diff <- function(kinase_1, kinase_2, percentile_data = kinase_percentile_per_tissue) {
+  kinase_1_percentiles = (kinase_percentile_per_tissue %>% filter(symbol == kinase_1))$kinase_percentile
+  kinase_2_percentiles = (kinase_percentile_per_tissue %>% filter(symbol == kinase_2))$kinase_percentile
+  return(mean(abs(kinase_1_percentiles - kinase_2_percentiles)))
+}
+
+library(tictoc)
+library(furrr)
+plan(multiprocess)
+tic()
+kinase_expression_correlations = crossing(kinase_1 = unique(kinase_percentile_per_tissue$symbol),
+                                          kinase_2 = unique(kinase_percentile_per_tissue$symbol)) %>%
+  filter(kinase_1 != kinase_2) %>%
+  mutate(kinase_percentile_cor = future_map2_dbl(kinase_1, kinase_2, calc_cor)) %>%
+  mutate(mean_diff = future_map2_dbl(kinase_1, kinase_2, calc_mean_diff)) %>%
+  mutate(kinase_percentile_cor = round(kinase_percentile_cor,2)) %>%
+  mutate(mean_diff = round(mean_diff,2)) %>%
+  left_join(all_kinases %>% select(symbol,class), by=c("kinase_1"="symbol")) %>%
+  rename(kinase_1_class = class) %>%
+  left_join(all_kinases %>% select(symbol,class), by=c("kinase_2"="symbol")) %>%
+  rename(kinase_2_class = class) %>%
+  write_rds(here('GTEx/GTEx_expression_correlations.rds'))
+  identity()
+toc()
+```
+```{r}
+GTEx_expression_correlations %>%
+  filter(kinase_1_class == "Dark") %>%
+  write_rds(here('GTEx/GTEx_expression_correlations_DK_only.rds'))
+```
+
+```{r}
+
+
+temp = kinase_expression_correlations %>% 
+  filter(kinase_1_class == "Dark", kinase_2_class == "Light") %>% 
+  filter(kinase_1 == "MKNK2") %>%
+  arrange(desc(cor_signf))
+
+percentile_comparisons = kinase_percentile_per_tissue %>% 
+  filter(symbol %in% c(temp$kinase_2[1:5])) %>% 
+  left_join(kinase_percentile_per_tissue %>% 
+              filter(symbol == "MKNK2") %>%
+              select(tissue_type,kinase_percentile) %>%
+              rename(DK_percentile = kinase_percentile))
+
+library(BerginskiRMisc)
+ggplot(percentile_comparisons, aes(x=DK_percentile,y=kinase_percentile, color=symbol)) + 
+  geom_point() +
+  xlim(0,100) + 
+  ylim(0,100) + theme_berginski()
 ```
 
 ```{r}
