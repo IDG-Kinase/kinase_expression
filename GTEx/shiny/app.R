@@ -68,7 +68,7 @@ mass_spec_desc = HTML(paste0("The kinase expression percentile is calculated by 
 # Main Shiny App
 
 ui <- navbarPage("Dark Kinase Expression",
-                 header = singleton(includeScript("google-analytics.js")),
+                 header = singleton(includeHTML("google-analytics.js")),
                  tabPanel("By Kinase - RNAseq",
                           # Sidebar panel for inputs ----
                           fluidRow(
