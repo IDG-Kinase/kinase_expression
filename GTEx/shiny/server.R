@@ -1,4 +1,12 @@
-function(input, output) {
+function(input, output, session) {
+  
+  observe({
+    query <- parseQueryString(session$clientData$url_search)
+    if (!is.null(query[['input_kinase']]) && 
+        query[['input_kinase']] %in% dark_kinase_percentiles$symbol) {
+      updateSelectInput(session, "kinase", selected = query[['input_kinase']])
+    }
+  })
   
   #############################################################################
   #Kinase Searching Functions
