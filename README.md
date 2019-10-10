@@ -1,4 +1,4 @@
-# Kinase Expression
+# Kinase Expression Data and Shiny Application
 
 Collection of scripts and shiny app associated with kinase expression.
 
