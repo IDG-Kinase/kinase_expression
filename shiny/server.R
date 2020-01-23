@@ -48,10 +48,10 @@ function(input, output, session) {
       theme_berginski()
   })
   
-  output$kinase_data_summary <- renderDataTable({
-    datatable(this_kinase_selection() %>%
-                select(-percentile_index,-organ_percentile_index),
-              options = dataTableOptions)
+  output$kinase_data_summary <- renderReactable({
+    reactable(this_kinase_selection() %>%
+                select(-percentile_index,-organ_percentile_index), 
+              filterable = TRUE)
   })
   
   output$matchedLightKinases <- renderPrint({
@@ -122,10 +122,10 @@ function(input, output, session) {
       theme_berginski()
   })
   
-  output$kinase_organ_summary <- renderDataTable({
-    datatable(this_organ_selection() %>%
+  output$kinase_organ_summary <- renderReactable({
+    reactable(this_organ_selection() %>%
                 select(-percentile_index,-organ_percentile_index),
-              options = dataTableOptions)
+              filterable = TRUE)
   })
   
   
@@ -166,10 +166,10 @@ function(input, output, session) {
       theme_berginski()
   })
   
-  output$HPM_kinase_data_summary <- renderDataTable({
-    datatable(this_HPM_kinase_selection() %>%
-                select(-percentile_index,-organ_percentile_index),
-              options = dataTableOptions)
+  output$HPM_kinase_data_summary <- renderReactable({
+    reactable(this_HPM_kinase_selection() %>%
+                select(-percentile_index,-organ_percentile_index), 
+              filterable = TRUE)
   })
   
   #############################################################################
@@ -209,10 +209,10 @@ function(input, output, session) {
       theme_berginski()
   })
   
-  output$HPM_kinase_organ_summary <- renderDataTable({
-    datatable(this_HPM_organ_selection() %>%
-                select(-percentile_index,-organ_percentile_index),
-              options = dataTableOptions)
+  output$HPM_kinase_organ_summary <- renderReactable({
+    reactable(this_HPM_organ_selection() %>%
+                select(-percentile_index,-organ_percentile_index), 
+              filterable = TRUE)
   })
   
   

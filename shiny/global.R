@@ -4,6 +4,7 @@ library(tidyverse)
 library(DT)
 library(here)
 library(BerginskiRMisc)
+library(reactable)
 
 ###############################################################################
 # Data Loading

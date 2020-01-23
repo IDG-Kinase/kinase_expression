@@ -1,8 +1,8 @@
 navbarPage(title = div(
-	div(
-		id = "img-id",
-		a(href = "https://druggablegenome.net/",img(src = "IDG_logo.png", height="20%",width="20%"), target = "_blank")
-	),
+	# div(
+	# 	id = "img-id",
+	# 	a(href = "https://druggablegenome.net/",img(src = "IDG_logo.png", height="20%",width="20%"), target = "_blank")
+	# ),
 	"Dark Kinase Expression"
 ),
 theme = "style.css",
@@ -59,7 +59,7 @@ tabPanel("By Kinase - RNAseq",
 				 # Main panel for displaying outputs ----
 				 fluidRow(
 				 	column(12,
-				 				 dataTableOutput("kinase_data_summary")
+				 				 reactableOutput("kinase_data_summary")
 				 	)
 				 )
 ),
@@ -93,7 +93,7 @@ tabPanel("By Organ System - RNAseq",
 				 # Main panel for displaying outputs ----
 				 fluidRow(
 				 	column(12,
-				 				 dataTableOutput("kinase_organ_summary")
+				 				 reactableOutput("kinase_organ_summary")
 				 	)
 				 )
 ),
@@ -122,7 +122,7 @@ tabPanel("By Kinase - Mass Spec",
 				 # Main panel for displaying outputs ----
 				 fluidRow(
 				 	column(12,
-				 				 dataTableOutput("HPM_kinase_data_summary")
+				 				 reactableOutput("HPM_kinase_data_summary")
 				 	)
 				 )
 ),
@@ -151,7 +151,7 @@ tabPanel("By Organ System - Mass Spec",
 				 # Main panel for displaying outputs ----
 				 fluidRow(
 				 	column(12,
-				 				 dataTableOutput("HPM_kinase_organ_summary")
+				 				 reactableOutput("HPM_kinase_organ_summary")
 				 	)
 				 )
 )
