@@ -42,24 +42,16 @@ tabPanel("By Kinase - RNAseq",
 				 				 htmlOutput("matchedDarkKinases"))
 				 ),
 				 
-				 # hr(),
-				 # fluidRow(
-				 #   column(4,
-				 #          h3("Kinase Expression Similarity")),
-				 #   column(4,
-				 #          h3("Light"),
-				 #          htmlOutput("matchedLightKinases")),
-				 #   column(4,
-				 #          h4("Dark"),
-				 #          textOutput("matchedDarkKinases"))
-				 # ),
-				 
-				 
 				 hr(),
 				 # Main panel for displaying outputs ----
 				 fluidRow(
 				 	column(12,
 				 				 reactableOutput("kinase_data_summary")
+				 	)
+				 ),
+				 fluidRow(
+				 	column(12,
+				 				 downloadButton("download_kinase_data_summary", "Download")
 				 	)
 				 )
 ),
@@ -95,6 +87,11 @@ tabPanel("By Organ System - RNAseq",
 				 	column(12,
 				 				 reactableOutput("kinase_organ_summary")
 				 	)
+				 ),
+				 fluidRow(
+				 	column(12,
+				 				 downloadButton("download_kinase_organ_summary", "Download")
+				 	)
 				 )
 ),
 tabPanel("By Kinase - Mass Spec",
@@ -124,7 +121,13 @@ tabPanel("By Kinase - Mass Spec",
 				 	column(12,
 				 				 reactableOutput("HPM_kinase_data_summary")
 				 	)
+				 ),
+				 fluidRow(
+				 	column(12,
+				 				 downloadButton("download_HPM_kinase_data_summary", "Download")
+				 	)
 				 )
+				 
 ),
 tabPanel("By Organ System - Mass Spec",
 				 fluidRow(
@@ -152,6 +155,11 @@ tabPanel("By Organ System - Mass Spec",
 				 fluidRow(
 				 	column(12,
 				 				 reactableOutput("HPM_kinase_organ_summary")
+				 	)
+				 ),
+				 fluidRow(
+				 	column(12,
+				 				 downloadButton("download_HPM_kinase_organ_summary", "Download")
 				 	)
 				 )
 )

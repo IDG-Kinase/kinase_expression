@@ -54,6 +54,13 @@ function(input, output, session) {
               filterable = TRUE)
   })
   
+  output$download_kinase_data_summary <- downloadHandler(
+    filename = "kinase_data_summary.csv",
+    content = function(file) {
+      write_csv(this_kinase_selection(), file)
+    }
+  )
+  
   output$matchedLightKinases <- renderPrint({
     matched_light = GTEx_correlations %>%
       filter(kinase_1 == input$kinase, kinase_2_class == "Light") %>%
@@ -128,6 +135,13 @@ function(input, output, session) {
               filterable = TRUE)
   })
   
+  output$download_kinase_organ_summary <- downloadHandler(
+    filename = "kinase_data_organ_summary.csv",
+    content = function(file) {
+      write_csv(this_organ_selection(), file)
+    }
+  )
+  
   
   #############################################################################
   #HPM - Kinase Searching Functions
@@ -172,6 +186,13 @@ function(input, output, session) {
               filterable = TRUE)
   })
   
+  output$download_HPM_kinase_data_summary <- downloadHandler(
+    filename = "kinase_HPM_data_summary.csv",
+    content = function(file) {
+      write_csv(this_HPM_kinase_selection(), file)
+    }
+  )
+  
   #############################################################################
   #HPM - Organ Searching Functions
   #############################################################################
@@ -215,5 +236,11 @@ function(input, output, session) {
               filterable = TRUE)
   })
   
+  output$download_HPM_kinase_organ_summary <- downloadHandler(
+    filename = "kinase_HPM_organ_data_summary.csv",
+    content = function(file) {
+      write_csv(this_HPM_organ_selection(), file)
+    }
+  )
   
 }
