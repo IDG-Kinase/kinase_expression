@@ -56,7 +56,6 @@ HPM_dark_kinase_order_by_system = HPM_kinase_percentiles %>%
 
 # Misc Global Variables ####
 
-
 dataTableOptions = list(paging = FALSE, 
                         order = list(list(6, 'desc')))
 

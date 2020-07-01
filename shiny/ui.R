@@ -3,9 +3,14 @@ navbarPage(title = div(
 	# 	id = "img-id",
 	# 	a(href = "https://druggablegenome.net/",img(src = "IDG_logo.png", height="20%",width="20%"), target = "_blank")
 	# ),
+	div(
+		id = "return-DKK",
+		tags$a(href="https://darkkinome.org", "Dark Kinome Knowledgebase", target="_blank")
+	),
 	"Dark Kinase Expression"
 ),
 theme = "style.css",
+windowTitle = "Dark Kinase Expression Browser",
 header = singleton(includeHTML("google-analytics.js")),
 tabPanel("By Kinase - RNAseq",
 				 # Sidebar panel for inputs ----
