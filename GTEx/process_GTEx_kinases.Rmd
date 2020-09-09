@@ -9,6 +9,7 @@ output: html_document
 library(tidyverse)
 library(here)
 
+library(BerginskiRMisc)
 library(DarkKinaseTools)
 ```
 
@@ -56,18 +57,60 @@ kinase_percentile_per_tissue = kinase_data_tidy %>%
   group_by(tissue_type) %>%
   mutate(kinase_percentile = 100*round(percent_rank(TPM),2)) %>%
   write_csv(here('GTEx/GTex_kinase_percentiles.csv'))
+```
 
-highly_expressed_DK = kinase_percentile_per_tissue %>%
-  filter(class == "Dark",kinase_percentile >= 90)
+```{r draw kinase percentile graphs}
+dark_kinase_percentiles = kinase_percentile_per_tissue %>% 
+  filter(class == "Dark") %>% 
+  #This bit of code adds a column for the positional index of the ranked kinase
+  #percentile, will be used for plotting purposes
+  group_by(symbol) %>% 
+  arrange(desc(kinase_percentile)) %>% 
+  mutate(percentile_index = 1:n()) %>% 
+  ungroup() %>%
+  
+  #Comparible bit to add an organ percentile index
+  group_by(tissue_type) %>%
+  arrange(desc(kinase_percentile)) %>%
+  mutate(organ_percentile_index = 1:n()) %>%
+  ungroup()
 
-write_csv(highly_expressed_DK,here('GTEx/highly_expressed_DK_90_percentile.csv'))
+dir.create(here('GTEx/kinase_percentile_graphs'))
 
-dir.create(here('GTEx','GTEx_highly_expressed_kinases'),showWarnings = F)
-for (this_tissue in unique(highly_expressed_DK$tissue_type)) {
-  this_kinase_data = highly_expressed_DK %>% 
-    filter(tissue_type == this_tissue) %>% 
-    arrange(desc(kinase_percentile))
-  write_csv(this_kinase_data, here('GTEx','GTEx_highly_expressed_kinases',paste0(this_tissue,'.csv')))
+for (this_kinase in unique(dark_kinase_percentiles$symbol)) {
+  full_kinase_data = dark_kinase_percentiles %>%
+    filter(symbol == this_kinase)
+  
+  kinase_percentile_plot = ggplot(dark_kinase_percentiles, 
+                                  aes(x=percentile_index,y=kinase_percentile, group=symbol)) +
+    geom_line(alpha=0.05) +
+    ylim(c(0,100)) +
+    geom_line(data=full_kinase_data, aes(x=percentile_index,y=kinase_percentile)) +
+    labs(x="Organ Index", y="Kinase Percentile") +
+    theme_berginski() +
+    theme(text = element_text(size=20),
+          plot.margin = margin(0,0,0,0, "cm"))
+  ggsave(here('GTEx/kinase_percentile_graphs',paste0(this_kinase,'.svg')))
+}
+```
+```{r}
+library(gganatogram)
+dir.create(here('GTEx/top_5_anatograms'))
+for (this_kinase in unique(dark_kinase_percentiles$symbol)) {
+  top_organ_data = dark_kinase_percentiles %>%
+    filter(symbol == this_kinase) %>%
+    arrange(desc(kinase_percentile)) %>%
+    slice(1:5)
+  
+  gganatogram(data=hgMale_key %>% filter(organ %in% top_organ_data$organ),
+                sex = 'Male') + theme_void() +
+      theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+  ggsave(here('GTEx/top_5_anatograms',paste0(this_kinase,'-male.svg')))
+  
+  gganatogram(data=hgFemale_key %>% filter(organ %in% top_organ_data$organ),
+              sex = 'Female') + theme_void() +
+    theme(plot.margin = margin(0, 0, 0, 0, "cm"))
+  ggsave(here('GTEx/top_5_anatograms',paste0(this_kinase,'-female.svg')))
 }
 ```
 
@@ -101,9 +144,10 @@ kinase_expression_correlations = crossing(kinase_1 = unique(kinase_percentile_pe
   left_join(all_kinases %>% select(symbol,class), by=c("kinase_2"="symbol")) %>%
   rename(kinase_2_class = class) %>%
   write_rds(here('GTEx/GTEx_expression_correlations.rds'))
-  identity()
+identity()
 toc()
 ```
+
 ```{r}
 GTEx_expression_correlations %>%
   filter(kinase_1_class == "Dark") %>%
@@ -140,4 +184,13 @@ highly_expressed_DK_tissue_counts = highly_expressed_DK %>%
 highly_expressed_DK_gene_counts = highly_expressed_DK %>%
   group_by(symbol) %>%
   summarise(tissue_count = n())
+```
+
+```{r}
+kinase_percentile_sd = kinase_percentile_per_tissue %>% 
+  group_by(symbol,class) %>% 
+  summarise(percentile_sd = sd(kinase_percentile), 
+            mean_percentile = mean(kinase_percentile), 
+            percentile_cv = mean_percentile/percentile_sd) %>% 
+  filter(class == "Dark", mean_percentile >= 25)
 ```
