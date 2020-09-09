@@ -6,6 +6,11 @@ function(input, output, session) {
         query[['input_kinase']] %in% dark_kinase_percentiles$symbol) {
       updateSelectInput(session, "kinase", selected = query[['input_kinase']])
     }
+    if (!is.null(query[['embed']]) && 
+        query[['embed']] == 1) {
+      hide(id="header-titles")
+    }
+    
   })
   
   #############################################################################

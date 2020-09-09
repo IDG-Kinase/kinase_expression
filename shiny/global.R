@@ -5,6 +5,7 @@ library(DT)
 library(here)
 library(BerginskiRMisc)
 library(reactable)
+library(shinyjs)
 
 ###############################################################################
 # Data Loading

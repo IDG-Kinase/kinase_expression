@@ -1,4 +1,8 @@
-navbarPage(title = div(
+tagList(
+	useShinyjs(),
+navbarPage(
+	
+	title = div(id = "header-titles",
 	# div(
 	# 	id = "img-id",
 	# 	a(href = "https://druggablegenome.net/",img(src = "IDG_logo.png", height="20%",width="20%"), target = "_blank")
@@ -169,4 +173,5 @@ tabPanel("By Organ System - Mass Spec",
 				 )
 )
 
+)
 )
