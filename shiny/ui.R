@@ -1,5 +1,5 @@
 tagList(
-	useShinyjs(),
+	shinyjs::useShinyjs(),
 navbarPage(
 	
 	title = div(id = "header-titles",
