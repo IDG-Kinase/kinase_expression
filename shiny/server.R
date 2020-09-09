@@ -9,6 +9,7 @@ function(input, output, session) {
     if (!is.null(query[['embed']]) && 
         query[['embed']] == 1) {
       shinyjs::hide(id="header-titles")
+      shinyjs::hide(id="download-button")
     }
     
   })

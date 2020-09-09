@@ -58,7 +58,7 @@ tabPanel("By Kinase - RNAseq",
 				 				 reactableOutput("kinase_data_summary")
 				 	)
 				 ),
-				 fluidRow(
+				 fluidRow(id = "download-button",
 				 	column(12,
 				 				 downloadButton("download_kinase_data_summary", "Download")
 				 	)
