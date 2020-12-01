@@ -1,4 +1,5 @@
 function(input, output, session) {
+  track_usage(storage_mode = store_rds(path = here('logs')))
   
   observe({
     query <- parseQueryString(session$clientData$url_search)

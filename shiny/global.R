@@ -6,6 +6,7 @@ library(here)
 library(BerginskiRMisc)
 library(reactable)
 library(shinyjs)
+library(shinylogs)
 
 ###############################################################################
 # Data Loading
