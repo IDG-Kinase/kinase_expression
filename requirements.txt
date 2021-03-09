@@ -1,0 +1,6 @@
+shiny
+github.jespermaag/gganatogram
+here
+github.mbergins/BerginskiRMisc
+reactable
+shinylogs
