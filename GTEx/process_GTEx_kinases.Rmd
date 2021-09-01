@@ -63,63 +63,7 @@ kinase_percentile_per_tissue = kinase_data_tidy %>%
 	write_csv(here('GTEx/GTex_kinase_percentiles.csv'))
 ```
 
-```{r draw kinase percentile graphs}
-dark_kinase_percentiles = kinase_percentile_per_tissue %>% 
-	filter(class == "Dark") %>% 
-	#This bit of code adds a column for the positional index of the ranked kinase
-	#percentile, will be used for plotting purposes
-	group_by(symbol) %>% 
-	arrange(desc(kinase_percentile)) %>% 
-	mutate(percentile_index = 1:n()) %>% 
-	ungroup() %>%
-	
-	#Compatible bit to add an organ percentile index
-	group_by(tissue_type) %>%
-	arrange(desc(kinase_percentile)) %>%
-	mutate(organ_percentile_index = 1:n()) %>%
-	ungroup()
-
-dir.create(here('GTEx/kinase_percentile_graphs'))
-
-for (this_kinase in unique(dark_kinase_percentiles$symbol)) {
-	full_kinase_data = dark_kinase_percentiles %>%
-		filter(symbol == this_kinase)
-	
-	kinase_percentile_plot = ggplot(dark_kinase_percentiles, 
-																	aes(x=percentile_index,y=kinase_percentile, group=symbol)) +
-		geom_line(alpha=0.05) +
-		ylim(c(0,100)) +
-		geom_line(data=full_kinase_data, aes(x=percentile_index,y=kinase_percentile)) +
-		labs(x="Organ Index", y="Kinase Percentile") +
-		theme_berginski() +
-		theme(text = element_text(size=20),
-					plot.margin = margin(0,0,0,0, "cm"))
-	ggsave(here('GTEx/kinase_percentile_graphs',paste0(this_kinase,'.svg')))
-}
-```
 ```{r}
-library(gganatogram)
-dir.create(here('GTEx/top_5_anatograms'))
-for (this_kinase in unique(dark_kinase_percentiles$symbol)) {
-	top_organ_data = dark_kinase_percentiles %>%
-		filter(symbol == this_kinase) %>%
-		arrange(desc(kinase_percentile)) %>%
-		slice(1:5)
-	
-	gganatogram(data=hgMale_key %>% filter(organ %in% top_organ_data$organ),
-							sex = 'Male') + theme_void() +
-		theme(plot.margin = margin(0, 0, 0, 0, "cm"))
-	ggsave(here('GTEx/top_5_anatograms',paste0(this_kinase,'-male.svg')))
-	
-	gganatogram(data=hgFemale_key %>% filter(organ %in% top_organ_data$organ),
-							sex = 'Female') + theme_void() +
-		theme(plot.margin = margin(0, 0, 0, 0, "cm"))
-	ggsave(here('GTEx/top_5_anatograms',paste0(this_kinase,'-female.svg')))
-}
-```
-
-```{r}
-
 kinase_expression_correlations = kinase_percentile_per_tissue %>% 
   select(symbol,tissue_type,kinase_percentile) %>% 
   pivot_wider(names_from =symbol, values_from = kinase_percentile) %>%
@@ -138,7 +82,6 @@ kinase_expression_correlations = kinase_percentile_per_tissue %>%
 	rename(kinase_2_class = class) %>%
 	write_rds(here('GTEx/GTEx_expression_correlations.rds')) %>%
   identity()
-
 ```
 
 ```{r}
